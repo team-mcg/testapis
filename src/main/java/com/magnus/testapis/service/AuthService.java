@@ -14,6 +14,7 @@ import com.magnus.testapis.config.JwtService;
 import com.magnus.testapis.dto.AuthResponse;
 import com.magnus.testapis.dto.LoginRequest;
 import com.magnus.testapis.dto.RegisterRequest;
+import com.magnus.testapis.dto.UserProfileResponse;
 import com.magnus.testapis.entity.User;
 import com.magnus.testapis.repository.UserRepository;
 
@@ -126,5 +127,19 @@ public class AuthService {
         } catch (Exception e) {
             return AuthResponse.failure("Invalid token: " + e.getMessage());
         }
+    }
+
+    public UserProfileResponse getProfile(String username) {
+        User user = userRepository.findByUsername(username).get();
+        
+        return mapToProfileResponse(user);
+    }
+    
+    private UserProfileResponse mapToProfileResponse(User user) {
+        return UserProfileResponse.builder()
+                .username(user.getUsername())
+                .email(user.getEmail())
+                
+                .build();
     }
 }

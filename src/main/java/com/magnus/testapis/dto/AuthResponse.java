@@ -1,6 +1,8 @@
 package com.magnus.testapis.dto;
 
 
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -14,6 +16,7 @@ public class AuthResponse {
     private Long expiresIn;
     private String message;
     private boolean success;
+    private Map<String, String> errors;  // For validation errors
     
     // Constructors
     public AuthResponse() {}
@@ -39,6 +42,15 @@ public class AuthResponse {
         AuthResponse response = new AuthResponse();
         response.setMessage(message);
         response.setSuccess(false);
+        return response;
+    }
+    
+ // Factory method for validation errors
+    public static AuthResponse validationError(Map<String, String> errors) {
+        AuthResponse response = new AuthResponse();
+        response.success = false;
+        response.message = "Validation failed";
+        response.errors = errors;
         return response;
     }
     
@@ -106,4 +118,7 @@ public class AuthResponse {
     public void setSuccess(boolean success) {
         this.success = success;
     }
+    
+    public Map<String, String> getErrors() { return errors; }
+    public void setErrors(Map<String, String> errors) { this.errors = errors; }
 }

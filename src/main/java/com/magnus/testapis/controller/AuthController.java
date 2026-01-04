@@ -2,9 +2,16 @@ package com.magnus.testapis.controller;
 
 
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.magnus.testapis.dto.AuthResponse;
 import com.magnus.testapis.dto.LoginRequest;
 import com.magnus.testapis.dto.RegisterRequest;
+import com.magnus.testapis.dto.UserProfileResponse;
 import com.magnus.testapis.service.AuthService;
 
 import jakarta.validation.Valid;
@@ -42,7 +50,59 @@ public class AuthController {
     }
     
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request, BindingResult bindingResult) {
+    	// Check for validation errors first
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                String field = error.getField();
+                String message = error.getDefaultMessage();
+                
+                // Customize messages for empty fields
+                if ("email".equals(field) && request.getEmail() != null && request.getEmail().trim().isEmpty()) {
+                    message = "Email cannot be empty";
+                } else if ("password".equals(field) && request.getPassword() != null && request.getPassword().trim().isEmpty()) {
+                    message = "Password cannot be empty";
+                }
+                
+                errors.put(field, message);
+            }
+            
+            // Create error response
+            AuthResponse errorResponse = new AuthResponse();
+            errorResponse.setSuccess(false);
+            errorResponse.setMessage("Validation failed");
+            errorResponse.setErrors(errors);
+            
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+        
+        // Additional custom validation
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            Map<String, String> errors = new HashMap<>();
+            errors.put("email", "Email is required");
+            
+            AuthResponse errorResponse = new AuthResponse();
+            errorResponse.setSuccess(false);
+            errorResponse.setMessage("Email is required");
+            errorResponse.setErrors(errors);
+            
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+        
+        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
+            Map<String, String> errors = new HashMap<>();
+            errors.put("password", "Password is required");
+            
+            AuthResponse errorResponse = new AuthResponse();
+            errorResponse.setSuccess(false);
+            errorResponse.setMessage("Password is required");
+            errorResponse.setErrors(errors);
+            
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+        
         AuthResponse response = authService.login(request);
         
         if (response.isSuccess()) {
@@ -69,6 +129,14 @@ public class AuthController {
         }
     }
     
+    @GetMapping("/me")
+    public ResponseEntity<UserProfileResponse> getMyProfile() {
+        String username = getCurrentUsername();
+        UserProfileResponse profile = authService.getProfile(username);
+        return ResponseEntity.ok(profile);
+    }
+    
+    
     @GetMapping("/health")
     public ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok("JWT Authentication API is running (Spring Boot 3.5.9)");
@@ -77,5 +145,14 @@ public class AuthController {
     @GetMapping("/test")
     public ResponseEntity<String> test() {
         return ResponseEntity.ok("Test endpoint - Public access");
+    }
+    
+ // Helper method to get current username from security context
+    private String getCurrentUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User not authenticated");
+        }
+        return authentication.getName();
     }
 }
