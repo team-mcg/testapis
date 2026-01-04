@@ -50,59 +50,8 @@ public class AuthController {
     }
     
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request, BindingResult bindingResult) {
-    	// Check for validation errors first
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = new HashMap<>();
-            
-            for (FieldError error : bindingResult.getFieldErrors()) {
-                String field = error.getField();
-                String message = error.getDefaultMessage();
-                
-                // Customize messages for empty fields
-                if ("email".equals(field) && request.getEmail() != null && request.getEmail().trim().isEmpty()) {
-                    message = "Email cannot be empty";
-                } else if ("password".equals(field) && request.getPassword() != null && request.getPassword().trim().isEmpty()) {
-                    message = "Password cannot be empty";
-                }
-                
-                errors.put(field, message);
-            }
-            
-            // Create error response
-            AuthResponse errorResponse = new AuthResponse();
-            errorResponse.setSuccess(false);
-            errorResponse.setMessage("Validation failed");
-            errorResponse.setErrors(errors);
-            
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        }
-        
-        // Additional custom validation
-        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
-            Map<String, String> errors = new HashMap<>();
-            errors.put("email", "Email is required");
-            
-            AuthResponse errorResponse = new AuthResponse();
-            errorResponse.setSuccess(false);
-            errorResponse.setMessage("Email is required");
-            errorResponse.setErrors(errors);
-            
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        }
-        
-        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
-            Map<String, String> errors = new HashMap<>();
-            errors.put("password", "Password is required");
-            
-            AuthResponse errorResponse = new AuthResponse();
-            errorResponse.setSuccess(false);
-            errorResponse.setMessage("Password is required");
-            errorResponse.setErrors(errors);
-            
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        }
-        
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+    	
         AuthResponse response = authService.login(request);
         
         if (response.isSuccess()) {
