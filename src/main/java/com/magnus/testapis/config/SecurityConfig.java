@@ -54,7 +54,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/testApi/auth/**").permitAll() // Add this!
                 .requestMatchers("/api/public/**").permitAll()
-                .requestMatchers("/error").permitAll()
+                .requestMatchers("/health-api/**").permitAll()               .requestMatchers("/error").permitAll()
                 
                 // Authenticated endpoints
                 .anyRequest().authenticated()
