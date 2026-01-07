@@ -1,5 +1,7 @@
 package com.magnus.testapis.service;
 
+import javax.naming.AuthenticationException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -75,15 +77,21 @@ public class AuthService {
             User user = userRepository.findByEmail(request.getEmail())
                     .orElseThrow(() -> new RuntimeException("User not found"));
             
-            // Then authenticate using the actual username
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            user.getUsername(),  // Use username from database
-                            request.getPassword()
-                    )
-            );
-            
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            try {
+				// Then authenticate using the actual username
+				Authentication authentication = authenticationManager.authenticate(
+				        new UsernamePasswordAuthenticationToken(
+				                user.getUsername(),  // Use username from database
+				                request.getPassword()
+				        )
+				);
+				
+				SecurityContextHolder.getContext().setAuthentication(authentication);
+			} catch (Exception e) 
+            {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
             
             // Generate JWT token
             String token = jwtService.generateToken(user.getUsername());
